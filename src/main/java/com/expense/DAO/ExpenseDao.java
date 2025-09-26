@@ -83,4 +83,73 @@ public class ExpenseDao{
             stmt.executeUpdate();
         }
     }
+    private static final String ADD_EXPENSE = "INSERT INTO expense (description, category_id, amount) VALUES (?, ?, ?)";
+    private static final String GET_EXPENSES = "SELECT e.*, c.name as category_name FROM expense e LEFT JOIN categories c ON e.category_id = c.id";
+    private static final String EDIT_EXPENSE = "UPDATE expense SET description = ?, category_id = ?, amount = ? WHERE id = ?";
+    private static final String DELETE_EXPENSE = "DELETE FROM expense WHERE id = ?";
+
+    public String getAddExpense(String description, int categoryId, int amount) throws SQLException{
+        try (
+            Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(ADD_EXPENSE, Statement.RETURN_GENERATED_KEYS);
+        ) {
+            stmt.setString(1, description);
+            stmt.setInt(2, categoryId);
+            stmt.setInt(3, amount);
+            int rowsAffected = stmt.executeUpdate();
+            if(rowsAffected == 0) throw new SQLException("Creating expense failed, no rows affected.");
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return String.valueOf(generatedKeys.getLong(1));
+                }
+                else {
+                    throw new SQLException("Creating expense failed, no ID obtained.");
+                }
+            }
+        }
+    }
+
+    public java.util.List<java.util.Map<String, Object>> getExpenses() throws SQLException{
+        try (
+            Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(GET_EXPENSES);
+        ) {
+            ResultSet rs = stmt.executeQuery();
+            java.util.List<java.util.Map<String, Object>> expenses = new ArrayList<>();
+            while(rs.next()) {
+                java.util.Map<String, Object> expense = new java.util.HashMap<>();
+                expense.put("id", rs.getInt("id"));
+                expense.put("description", rs.getString("description"));
+                expense.put("category_id", rs.getInt("category_id"));
+                expense.put("amount", rs.getInt("amount"));
+                expense.put("created_at", rs.getTimestamp("created_at"));
+                expense.put("category_name", rs.getString("category_name"));
+                expenses.add(expense);
+            }
+            return expenses;
+        }
+    }
+
+    public void getEditExpense(int id, String description, int categoryId, int amount) throws SQLException{
+        try (
+            Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(EDIT_EXPENSE);
+        ) {
+            stmt.setString(1, description);
+            stmt.setInt(2, categoryId);
+            stmt.setInt(3, amount);
+            stmt.setInt(4, id);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void getDeleteExpense(int id) throws SQLException{
+        try (
+            Connection conn = DatabaseConnection.getDBConnection();
+            PreparedStatement stmt = conn.prepareStatement(DELETE_EXPENSE);
+        ) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+    }
 }
