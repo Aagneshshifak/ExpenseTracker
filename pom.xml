@@ -3,24 +3,19 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.expense</groupId>
-    <artifactId>expense-tracker</artifactId>
+    <artifactId>expense-application</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-
-    <name>Todo Application</name>
-    <description>A Java Swing-based Expense Tracker Application with MySQL database</description>
-
+    <name>Expense Application</name>
+    <description>A Java Swing-based Expense Application with MySQL database</description>
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mysql.version>8.0.33</mysql.version>
     </properties>
-
     <dependencies>
         <!-- MySQL JDBC Driver -->
         <dependency>
@@ -29,7 +24,6 @@
             <version>${mysql.version}</version>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <!-- Maven Compiler Plugin -->
@@ -38,26 +32,32 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
             </plugin>
-
-            <!-- Maven Exec Plugin -->
+            
+            <!-- Maven Surefire Plugin for running tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0</version>
+            </plugin>
+            
+            <!-- Maven Exec Plugin for running the application -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>com.expense.Main</mainClass>
+                     <mainClass>com.expense.Main</mainClass>
                 </configuration>
             </plugin>
-
-            <!-- Maven Shade Plugin -->
+            <!-- Maven Shade Plugin for creating executable JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.4.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
