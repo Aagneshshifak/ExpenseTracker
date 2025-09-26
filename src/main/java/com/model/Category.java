@@ -1,8 +1,20 @@
 package com.model;
 
 public class Category {
-    private String categoryid;
-    private String categoryname;
-    private String categorydescription;
+    private String id;
+    private String name;
+
+    public Category(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+    
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
     
 }

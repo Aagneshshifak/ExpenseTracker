@@ -9,6 +9,10 @@ import java.awt.*;
 import java.awt.event.*;
 import com.expense.util.DatabaseConnection;
 import java.util.Date;
+import java.sql.SQLException;
+import com.expense.DAO.ExpenseDao;
+
+
 
 
 class CategoryGUI extends JFrame {
@@ -17,24 +21,67 @@ class CategoryGUI extends JFrame {
     private JLabel nameLabel;
     private JTextField nameField;
     private JButton addButton;
+    private JButton editButton;
+    private JButton deleteButton;
+    private JButton refreshButton;
     private JTable categoryTable;
     private DefaultTableModel tableModel;
-
+    private ExpenseDao expenseDao;
     // Constructor
     public CategoryGUI() {
+        expenseDao = new ExpenseDao();
         initializeComponents();
         setupComponents();
         setupEventListeners();
-    }
-
-    private void initializeComponents() {
-        setTitle("Category Management");
-        setSize(600, 400);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null); // Center the window
+        loadCategories();
         setVisible(true);
     }
+    private void updateCategories() {
+        tableModel.setRowCount(0);
+        try {
+            java.util.List<Category> categories = expenseDao.getCategories();
+            for(Category category : categories) {
+                tableModel.addRow(new Object[]{category.getId(), category.getName()});
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading categories: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    private void loadCategories() {
+        updateCategories();
+    }
+    private void initializeComponents() {
+       setTitle("category management");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(900, 600);
+        setLocationRelativeTo(null);
 
+        String[] columnNames = {"ID", "Name"};
+        tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        categoryTable = new JTable(tableModel);
+        JScrollPane tableScrollPane = new JScrollPane(categoryTable);
+        add(tableScrollPane, BorderLayout.CENTER);
+
+        editButton = new JButton("Edit");
+        deleteButton = new JButton("Delete");
+        addButton = new JButton("Add");
+        refreshButton = new JButton("Refresh");
+
+        nameField = new JTextField(20);
+        nameLabel = new JLabel("Category Name:");
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(addButton);
+        buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(refreshButton);
+
+    }
     private void setupComponents() {
         panel = new JPanel(new BorderLayout());
 
@@ -47,38 +94,92 @@ class CategoryGUI extends JFrame {
         topPanel.add(nameField);
         topPanel.add(addButton);
 
+        // Button panel for Edit, Delete, Refresh
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(refreshButton);
+
         // Table for displaying categories
-        String[] columnNames = {"ID", "Name", "Created At"};
+        String[] columnNames = {"ID", "Name"};
         tableModel = new DefaultTableModel(columnNames, 0);
         categoryTable = new JTable(tableModel);
         JScrollPane tableScrollPane = new JScrollPane(categoryTable);
 
         panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
         panel.add(tableScrollPane, BorderLayout.CENTER);
 
         add(panel);
     }
-
+    private void setupEventListeners() {
+        addButton.addActionListener((ActionEvent e) -> onAddCategory());
+        editButton.addActionListener((ActionEvent e) -> onEditCategory());
+        deleteButton.addActionListener((ActionEvent e) -> onDeleteCategory());
+        refreshButton.addActionListener((ActionEvent e) -> onRefreshCategory());
+    }
     private void onAddCategory() {
         String name = nameField.getText().trim();
         if (name.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Category name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        // Here you would typically add the category to the database
-        // For demonstration, we'll just add it to the table with a dummy ID and current date
-        int id = tableModel.getRowCount() + 1; // Dummy ID
-        Date createdAt = new Date(); // Current date
-
-        tableModel.addRow(new Object[]{id, name, createdAt});
-        nameField.setText(""); // Clear input field
+        try {
+            String id = expenseDao.getAddCategory(name);
+            Date createdAt = new Date();
+            tableModel.addRow(new Object[]{id, name, createdAt});
+            nameField.setText("");
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error adding category: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
+    private void onEditCategory() {
+        int selectedRow = categoryTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a category to edit.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String name = nameField.getText().trim();
+        if (name.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Category name cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            String id = (String) tableModel.getValueAt(selectedRow, 0);
+            expenseDao.getEditCategory(name, id);
+            updateCategories();
+            nameField.setText("");
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error editing category: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+   private void onDeleteCategory() {
+    int selectedRow = categoryTable.getSelectedRow();
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Please select a category to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    try {
+        String id = (String) tableModel.getValueAt(selectedRow, 0);
+        expenseDao.getDeleteCategory(id);
+        updateCategories();
+        nameField.setText("");
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "Error deleting category: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
+   }
 
-    private void setupEventListeners() {
-        addButton.addActionListener((ActionEvent e) -> onAddCategory());
+    private void onRefreshCategory() {
+        updateCategories();
     }
 }
+
+
+
+
+
+
 class ExpenseGUI extends JFrame { 
     // Attributes
     private JPanel panel;

@@ -5,7 +5,6 @@ import java.time.LocalDate;
 public class Expense {
     private int expense_id;
     private int category_id;
-    private PaymentMethod paymentMethod;
     private int amount;
     private String description;
     private LocalDate expense_date;
@@ -15,10 +14,9 @@ public class Expense {
         this.created_at = LocalDate.now();
     }
 
-    public Expense(int expense_id, int category_id, PaymentMethod paymentMethod, int amount) {
+    public Expense(int expense_id, int category_id, int amount) {
         this.expense_id = expense_id;
         this.category_id = category_id;
-        this.paymentMethod = paymentMethod;
         this.amount = amount;
     }
 
@@ -38,13 +36,6 @@ public class Expense {
         this.category_id = category_id;
     }
 
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
 
     public int getAmount() {
         return amount;
